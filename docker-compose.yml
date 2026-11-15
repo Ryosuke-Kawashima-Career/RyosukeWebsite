@@ -34,6 +34,13 @@ services:
       - "127.0.0.1:${FRONTEND_HOST_PORT:-13000}:3000"
     depends_on:
       - backend
+  caddy:
+    image: caddy:2
+    ports:
+      - "127.0.0.1:${PROXY_HOST_PORT:-18000}:80"
+    volumes:
+      - ./Caddyfile.dev:/etc/caddy/Caddyfile:ro
+    depends_on: [frontend, backend]
 
 volumes:
   pgdata:
