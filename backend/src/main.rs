@@ -18,15 +18,23 @@ fn app() -> Router {
 }
 
 #[tokio::main]
-async fn main() {
+async fn main() -> anyhow::Result<()> {
+    dotenvy::dotenv().ok();
     tracing_subscriber::fmt::init();
 
+    let pool = sqlx::postgres::PgPoolOptions::new()
+        .max_connections(5)
+        .connect(&std::env::var("DATABASE_URL")?)
+        .await?;
+    sqlx::migrate!("./migrations").run(&pool).await?;
+    tracing::info!("migrations applied");
+
     let addr = std::env::var("BIND_ADDR").unwrap_or_else(|_| "0.0.0.0:8080".to_string());
-    let listener = tokio::net::TcpListener::bind(&addr)
-        .await
-        .expect("failed to bind address");
+    let listener = tokio::net::TcpListener::bind(&addr).await?;
     tracing::info!("listening on {addr}");
-    axum::serve(listener, app()).await.expect("server error");
+    axum::serve(listener, app()).await?;
+
+    Ok(())
 }
 
 #[cfg(test)]
