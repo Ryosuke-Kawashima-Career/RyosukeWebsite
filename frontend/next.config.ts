@@ -5,6 +5,20 @@ const nextConfig: NextConfig = {
   output: "standalone",
   cacheComponents: true,
   partialPrefetching: true,
+  // Restrict iframes to LinkedIn only via Content-Security-Policy.
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          {
+            key: "Content-Security-Policy",
+            value: "frame-src https://www.linkedin.com",
+          },
+        ],
+      },
+    ];
+  },
   turbopack: {
     rules: {
       "*.css": {
